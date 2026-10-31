@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baby Lotion Inventory System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .selected-item {
+            background: rgba(255,255,255,0.1);
+            padding: 6px 12px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stock-info {
+            background: rgba(255,255,255,0.1);
+            padding: 6px 12px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stock-value {
+            background: white;
+            color: #2d3748;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #f7fafc;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            font-size: 13px;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-close { background: #e53e3e; }
+        .btn-change { background: #805ad5; }
+        .btn-main { background: #2c5282; }
+        .btn-sub { background: #38a169; }
+        .btn-load { background: #2f855a; }
+        .btn-other { background: #4a5568; }
+        .btn-select { background: #0987a0; }
+
+        .results-info {
+            padding: 8px 20px;
+            background: #edf2f7;
+            font-size: 13px;
+            color: #4a5568;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            overflow-y: auto;
+            flex: 1;
+            position: relative;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        th {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #2c5282;
+            white-space: nowrap;
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+        }
+
+        th.new-column {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        th.new-column:hover {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+        }
+
+        th.new-column::before {
+            content: '✨ NEW';
+            position: absolute;
+            top: -8px;
+            right: 5px;
+            background: #fc8181;
+            color: white;
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            pointer-events: none;
+        }
+
+        .filter-icon {
+            display: inline-block;
+            margin-left: 5px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .filter-icon.active {
+            color: #fbbf24;
+            opacity: 1;
+        }
+
+        .filter-dropdown {
+            position: fixed;
+            background: white;
+            border: 2px solid #3182ce;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            min-width: 280px;
+            max-width: 350px;
+            z-index: 9999;
+            display: none;
+        }
+
+        .filter-dropdown.show {
+            display: block;
+        }
+
+        .filter-header {
+            padding: 12px;
+            background: #3182ce;
+            color: white;
+            font-weight: 600;
+            border-radius: 6px 6px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .filter-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            line-height: 20px;
+        }
+
+        .filter-search {
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .filter-search input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .filter-options {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .filter-option:hover {
+            background: #f7fafc;
+        }
+
+        .filter-option input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+        }
+
+        .filter-option label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 13px;
+            color: #2d3748;
+        }
+
+        .filter-actions {
+            padding: 10px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            flex: 1;
+            padding: 10px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .filter-btn-apply {
+            background: #48bb78;
+            color: white;
+        }
+
+        .filter-btn-apply:hover {
+            background: #38a169;
+        }
+
+        .filter-btn-clear {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .filter-btn-clear:hover {
+            background: #cbd5e0;
+        }
+
+        .select-all-option {
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            font-weight: 600;
+        }
+
+        tr {
+            transition: all 0.2s ease;
+        }
+
+        tbody tr:nth-child(odd) {
+            background: #f7fafc;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #ffffff;
+        }
+
+        tbody tr:hover {
+            background: #e6fffa;
+            cursor: pointer;
+        }
+
+        tbody tr.selected {
+            background: #bee3f8;
+            border-left: 4px solid #3182ce;
+        }
+
+        tbody tr.filtered-out {
+            display: none !important;
+        }
+
+        td {
+            padding: 10px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: left;
+        }
+
+        td.new-column-cell {
+            background: rgba(72, 187, 120, 0.05);
+            font-weight: 500;
+        }
+
+        .stock-zero { color: #e53e3e; font-weight: bold; }
+        .stock-low { color: #dd6b20; font-weight: 600; }
+        .stock-ok { color: #38a169; }
+        .item-name { font-weight: 500; color: #2d3748; }
+        .item-num { color: #718096; font-size: 12px; }
+        .category-text { color: #4a5568; font-size: 12px; }
+        .unit-price { font-weight: 600; color: #2f855a; }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            
+            .button-container {
+                padding: 8px;
+            }
+            
+            .btn {
+                min-width: 80px;
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="selected-item">
+                <span>Selected Item:</span>
+                <strong id="selectedItemNum">102658</strong>
+                <span id="selectedItemDesc" style="opacity: 0.8;">CETAPHIL BABY DAILY LOTION...</span>
+            </div>
+            <div class="stock-info">
+                <span>Stock:</span>
+                <span class="stock-value stock-zero" id="selectedStock">0.00</span>
+            </div>
+        </div>
+
+        <div class="button-container">
+            <button class="btn btn-close">Close</button>
+            <button class="btn btn-change">Change Item</button>
+            <button class="btn btn-main">Main Category</button>
+            <button class="btn btn-sub">Sub Category</button>
+            <button class="btn btn-load">Load Stock</button>
+            <button class="btn btn-other">Other Stores Stock</button>
+            <button class="btn btn-select">Select</button>
+        </div>
+
+        <div class="results-info">
+            Showing <strong id="visibleRows">19</strong> of <strong id="totalRows">19</strong> items
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th data-col="0">Description <span class="filter-icon">▼</span></th>
+                        <th data-col="1">ItemNum <span class="filter-icon">▼</span></th>
+                        <th class="new-column" data-col="2">Item List <span class="filter-icon">▼</span></th>
+                        <th class="new-column" data-col="3">Offer Type <span class="filter-icon">▼</span></th>
+                        <th data-col="4">Category <span class="filter-icon">▼</span></th>
+                        <th data-col="5">Sub Category <span class="filter-icon">▼</span></th>
+                        <th data-col="6">Unit Price <span class="filter-icon">▼</span></th>
+                        <th data-col="7">Stock <span class="filter-icon">▼</span></th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="filterDropdown" class="filter-dropdown"></div>
+
+    <script>
+        const db = [
+            {desc: "CETAPHIL BABY DAILY LOTION...", num: "102658", list: "Diamond", offer: "50% OFF", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 59.00, stock: 0.00},
+            {desc: "BEESLINE BABY LOTION 500 ML", num: "200482", list: "Diamond", offer: "1+1 FREE", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 20.00, stock: 0.00},
+            {desc: "MUSTELA B.LOTION HYD-BEB...", num: "205763", list: "Diamond", offer: "FLASH SALE", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 89.00, stock: 0.00},
+            {desc: "TOPICREM MY 1RST ULTRAM...", num: "227177", list: "Diamond", offer: "50% 2ND PC", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 95.00, stock: 0.00},
+            {desc: "CETAPHIL BABY CREAM FACE...", num: "230205", list: "Diamond", offer: "BUY 2 GET 1", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 75.00, stock: 0.00},
+            {desc: "ROOPA BABY LOTION-PREM C...", num: "231343", list: "Diamond", offer: "30% OFF", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 64.00, stock: 0.00},
+            {desc: "SANOSAN BABY CARE LOTO...", num: "240042", list: "Diamond", offer: "50% OFF", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 48.00, stock: 0.00},
+            {desc: "MUSTELA PHYSIOBEBE 300 ML", num: "205770", list: "Gold", offer: "50% 2ND PC", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 55.00, stock: 0.00},
+            {desc: "BIODERMA ABC DERM H2O 1...", num: "213326", list: "Gold", offer: "BUY 2 GET 1", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 98.00, stock: 0.00},
+            {desc: "BIODERMA ABC DERM H2O 1...", num: "213328", list: "Gold", offer: "30% OFF", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 42.00, stock: 0.00},
+            {desc: "ROOPA KIDS LOTION 300ML", num: "231343", list: "Gold", offer: "50% OFF", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 34.84, stock: 0.00},
+            {desc: "AVELINO BABY DAILY LOTION...", num: "234944", list: "Gold", offer: "1+1 FREE", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 67.60, stock: 0.00},
+            {desc: "WELEDA BABY LOTION 200ML", num: "238860", list: "Gold", offer: "FLASH SALE", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 71.00, stock: 0.00},
+            {desc: "BABE BABY MOISTURISING BO...", num: "213565", list: "Silver", offer: "50% OFF", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 150.00, stock: 0.00},
+            {desc: "AVEENO BABY LOTION 532 ML", num: "216396", list: "Silver", offer: "1+1 FREE", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 35.00, stock: 0.00},
+            {desc: "QV BABY SKIN LOTION 250 ML", num: "226860", list: "Silver", offer: "FLASH SALE", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 55.00, stock: 0.00},
+            {desc: "CETAPHIL BABY DAILY LOTION...", num: "239290", list: "Silver", offer: "50% 2ND PC", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 91.30, stock: 0.00},
+            {desc: "QV BABY SKIN LOTION 500 ML", num: "239845", list: "Silver", offer: "BUY 2 GET 1", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 105.00, stock: 0.00},
+            {desc: "SANOSAN BABY SOFT LOT HA...", num: "240017", list: "Silver", offer: "30% OFF", cat: "BABY LOTION-PREM", sub: "BABY LOTION-PREM", price: 30.00, stock: 0.00}
+        ];
+
+        const cols = ['desc', 'num', 'list', 'offer', 'cat', 'sub', 'price', 'stock'];
+        let filters = {};
+        let currentColIdx = null;
+
+        function loadTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            db.forEach((item, i) => {
+                const tr = document.createElement('tr');
+                tr.dataset.idx = i;
+                if (i === 0) tr.classList.add('selected');
+                
+                const values = [item.desc, item.num, item.list, item.offer, item.cat, item.sub, item.price.toFixed(2), item.stock.toFixed(2)];
+                values.forEach((v, ci) => {
+                    const td = document.createElement('td');
+                    td.textContent = v;
+                    td.dataset.col = ci;
+                    if (ci === 0) td.className = 'item-name';
+                    else if (ci === 1) td.className = 'item-num';
+                    else if (ci === 2 || ci === 3) td.className = 'new-column-cell';
+                    else if (ci === 4 || ci === 5) td.className = 'category-text';
+                    else if (ci === 6) td.className = 'unit-price';
+                    else if (ci === 7) td.className = item.stock === 0 ? 'stock-zero' : item.stock < 50 ? 'stock-low' : 'stock-ok';
+                    tr.appendChild(td);
+                });
+                
+                tr.addEventListener('click', () => selectRow(tr, item));
+                tbody.appendChild(tr);
+            });
+            
+            updateCount();
+        }
+
+        function selectRow(tr, item) {
+            document.querySelectorAll('#tableBody tr').forEach(r => r.classList.remove('selected'));
+            tr.classList.add('selected');
+            document.getElementById('selectedItemNum').textContent = item.num;
+            document.getElementById('selectedItemDesc').textContent = item.desc;
+            document.getElementById('selectedStock').textContent = item.stock.toFixed(2);
+        }
+
+        function showFilter(th, colIdx) {
+            currentColIdx = colIdx;
+            const dropdown = document.getElementById('filterDropdown');
+            const rect = th.getBoundingClientRect();
+            
+            dropdown.style.left = rect.left + 'px';
+            dropdown.style.top = (rect.bottom + 5) + 'px';
+            
+            const values = [...new Set(db.map(item => {
+                const v = item[cols[colIdx]];
+                return typeof v === 'number' ? v.toFixed(2) : v;
+            }))].sort();
+            
+            const selected = filters[colIdx] || new Set(values);
+            
+            let html = `
+                <div class="filter-header">
+                    <span>Filter: ${th.textContent.replace('▼', '').replace('✨ NEW', '').trim()}</span>
+                    <button class="filter-close" id="closeBtn">×</button>
+                </div>
+                <div class="filter-search">
+                    <input type="text" placeholder="Search..." id="filterSearch">
+                </div>
+                <div class="filter-options" id="filterOptions">
+                    <div class="filter-option select-all-option">
+                        <input type="checkbox" id="selectAll" ${selected.size === values.length ? 'checked' : ''}>
+                        <label for="selectAll">(Select All)</label>
+                    </div>
+            `;
+            
+            values.forEach((v, i) => {
+                html += `
+                    <div class="filter-option">
+                        <input type="checkbox" class="value-checkbox" value="${v}" ${selected.has(v) ? 'checked' : ''}>
+                        <label>${v}</label>
+                    </div>
+                `;
+            });
+            
+            html += `
+                </div>
+                <div class="filter-actions">
+                    <button class="filter-btn filter-btn-apply" id="applyBtn">Apply</button>
+                    <button class="filter-btn filter-btn-clear" id="clearBtn">Clear</button>
+                </div>
+            `;
+            
+            dropdown.innerHTML = html;
+            dropdown.classList.add('show');
+            
+            document.getElementById('closeBtn').addEventListener('click', hideFilter);
+            
+            document.getElementById('filterSearch').addEventListener('input', function() {
+                const term = this.value.toLowerCase();
+                document.querySelectorAll('#filterOptions .filter-option:not(.select-all-option)').forEach(opt => {
+                    const text = opt.textContent.toLowerCase();
+                    opt.style.display = text.includes(term) ? 'flex' : 'none';
+                });
+            });
+            
+            document.getElementById('selectAll').addEventListener('change', function() {
+                document.querySelectorAll('.value-checkbox').forEach(cb => {
+                    if (cb.parentElement.style.display !== 'none') {
+                        cb.checked = this.checked;
+                    }
+                });
+            });
+            
+            document.getElementById('applyBtn').addEventListener('click', applyCurrentFilter);
+            document.getElementById('clearBtn').addEventListener('click', clearCurrentFilter);
+        }
+
+        function applyCurrentFilter() {
+            const checked = [];
+            document.querySelectorAll('.value-checkbox:checked').forEach(cb => {
+                checked.push(cb.value);
+            });
+            
+            filters[currentColIdx] = new Set(checked);
+            
+            const rows = document.querySelectorAll('#tableBody tr');
+            rows.forEach(tr => {
+                let show = true;
+                
+                for (let ci in filters) {
+                    const cell = tr.querySelector(`td[data-col="${ci}"]`);
+                    if (cell) {
+                        const cellValue = cell.textContent.trim();
+                        if (!filters[ci].has(cellValue)) {
+                            show = false;
+                            break;
+                        }
+                    }
+                }
+                
+                tr.classList.toggle('filtered-out', !show);
+            });
+            
+            const th = document.querySelector(`th[data-col="${currentColIdx}"]`);
+            const icon = th.querySelector('.filter-icon');
+            
+            const allValues = [...new Set(db.map(item => {
+                const v = item[cols[currentColIdx]];
+                return typeof v === 'number' ? v.toFixed(2) : v;
+            }))];
+            
+            icon.classList.toggle('active', checked.length < allValues.length);
+            
+            updateCount();
+            hideFilter();
+        }
+
+        function clearCurrentFilter() {
+            delete filters[currentColIdx];
+            
+            const rows = document.querySelectorAll('#tableBody tr');
+            rows.forEach(tr => {
+                let show = true;
+                
+                for (let ci in filters) {
+                    const cell = tr.querySelector(`td[data-col="${ci}"]`);
+                    if (cell && !filters[ci].has(cell.textContent.trim())) {
+                        show = false;
+                        break;
+                    }
+                }
+                
+                tr.classList.toggle('filtered-out', !show);
+            });
+            
+            const th = document.querySelector(`th[data-col="${currentColIdx}"]`);
+            th.querySelector('.filter-icon').classList.remove('active');
+            
+            updateCount();
+            hideFilter();
+        }
+
+        function hideFilter() {
+            document.getElementById('filterDropdown').classList.remove('show');
+        }
+
+        function updateCount() {
+            document.getElementById('totalRows').textContent = db.length;
+            const visible = document.querySelectorAll('#tableBody tr:not(.filtered-out)').length;
+            document.getElementById('visibleRows').textContent = visible;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTable();
+            
+            document.querySelectorAll('th[data-col]').forEach(th => {
+                th.addEventListener('click', () => {
+                    showFilter(th, parseInt(th.dataset.col));
+                });
+            });
+            
+            document.addEventListener('click', (e) => {
+                const dropdown = document.getElementById('filterDropdown');
+                if (!dropdown.contains(e.target) && !e.target.closest('th[data-col]')) {
+                    hideFilter();
+                }
+            });
+        });
+
+        document.querySelector('.btn-select').addEventListener('click', () => {
+            const sel = document.querySelector('#tableBody tr.selected:not(.filtered-out)');
+            alert(sel ? 'Selected: ' + sel.cells[0].textContent : 'No item selected');
+        });
+
+        document.querySelector('.btn-close').addEventListener('click', () => {
+            if (confirm('Close window?')) window.close();
+        });
+    </script>
+</body>
+</html>

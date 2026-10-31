@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMS Order Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0;
+            background: white;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #e8e8e8;
+            padding: 10px;
+            border-bottom: 2px solid #ccc;
+        }
+
+        .header h2 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            padding: 8px 20px;
+            border: 1px solid #ccc;
+            background: #f0f0f0;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 3px 3px 0 0;
+        }
+
+        .tab.active {
+            background: white;
+            border-bottom: 2px solid white;
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .btn-close { background: #c85a54; }
+        .btn-view { background: #2e5cb8; }
+        .btn-refresh { background: #3a9bc6; }
+        .btn-clear { background: #8b4513; border: 2px solid #654321; }
+        .btn-notify { background: #4a8b4a; }
+        .btn-delivery { background: #2d8659; }
+
+        /* Global Search Section */
+        .global-search-section {
+            padding: 15px 20px;
+            background: #fff9e6;
+            border-bottom: 3px solid #ffd700;
+        }
+
+        .global-search-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .global-search-bar input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ffd700;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .global-search-bar input:focus {
+            outline: none;
+            border-color: #ffb700;
+            box-shadow: 0 0 10px rgba(255,215,0,0.3);
+        }
+
+        .global-search-bar button {
+            padding: 12px 30px;
+            background: #ffd700;
+            color: #333;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .global-search-bar button:hover {
+            background: #ffb700;
+            transform: scale(1.05);
+        }
+
+        .search-label {
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        /* Order Type Boxes - Updated Colors */
+        .order-type-section {
+            padding: 20px;
+            background: #fafafa;
+        }
+
+        .order-type-boxes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .order-type-box {
+            padding: 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .order-type-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.1);
+            transform: translateY(100%);
+            transition: transform 0.3s;
+        }
+
+        .order-type-box:hover::before {
+            transform: translateY(0);
+        }
+
+        .order-type-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        /* New Color Scheme Based on Last Action */
+        .order-type-box.delivered { 
+            background: linear-gradient(135deg, #ffb3ba 0%, #ff6b7a 100%); 
+        }
+        
+        .order-type-box.ready { 
+            background: linear-gradient(135deg, #90ee90 0%, #32cd32 100%); 
+        }
+        
+        .order-type-box.created { 
+            background: linear-gradient(135deg, #87ceeb 0%, #4682b4 100%); 
+        }
+
+        /* Default colors for order types */
+        .order-type-box.ssml { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .order-type-box.nphies { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .order-type-box.call-center { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .order-type-box.ecommerce-hybris { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+        .order-type-box.ecommerce-magento { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+        .order-type-box.wasfaty { background: linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%); }
+        .order-type-box.p2p { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .order-type-box.p2e { background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%); }
+
+        .order-type-box .count {
+            display: block;
+            font-size: 28px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        /* Filter Dropdown */
+        .filter-dropdown {
+            display: none;
+            position: absolute;
+            background: white;
+            border: 2px solid #4682b4;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+            min-width: 250px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .filter-dropdown.active {
+            display: block;
+        }
+
+        .filter-option {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            transition: all 0.2s;
+            color: #333;
+        }
+
+        .filter-option:hover {
+            background: #4682b4;
+            color: white;
+        }
+
+        .filter-option.selected {
+            background: #e3f2fd;
+            font-weight: bold;
+        }
+
+        /* Local Search Bar */
+        .search-section {
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-bar button {
+            padding: 10px 25px;
+            background: #666;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Orders Table */
+        .orders-table-container {
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        thead {
+            background: #f0f0f0;
+            position: sticky;
+            top: 0;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #ddd;
+            font-size: 13px;
+            color: #333;
+            position: relative;
+        }
+
+        th .filter-icon {
+            cursor: pointer;
+            margin-left: 5px;
+            color: #4682b4;
+        }
+
+        td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+        }
+
+        tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        tr:hover {
+            background: #f0f8ff;
+        }
+
+        tr.selected {
+            background: #87ceeb !important;
+        }
+
+        tr.highlighted-green {
+            background: #90ee90 !important;
+        }
+
+        tr.highlighted-blue {
+            background: #87cefa !important;
+        }
+
+        .checkbox-cell {
+            text-align: center;
+            width: 40px;
+        }
+
+        .status-delivered {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .status-ready {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .status-created {
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+
+            .order-type-boxes {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 11px;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 18px;
+            color: #666;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h2>🏥 OMS List - Order Management System</h2>
+            
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active">Documents</div>
+                <div class="tab">Unprocessed Items</div>
+            </div>
+
+            <!-- Action Buttons (Removed P2E Orders, P2P View, Sensor View) -->
+            <div class="action-buttons">
+                <button class="btn btn-close" onclick="closeWindow()">Close</button>
+                <button class="btn btn-view" onclick="viewSelected()">View</button>
+                <button class="btn btn-refresh" onclick="refreshData()">Refresh</button>
+                <button class="btn btn-clear" onclick="clearOrderConfirmed()">Clear Order Confirmed</button>
+                <button class="btn btn-notify" onclick="notifyCustomers()">Notify Customers</button>
+                <button class="btn btn-delivery" onclick="showDeliveryView()">Delivery View</button>
+            </div>
+        </div>
+
+        <!-- Global Fuzzy Search -->
+        <div class="global-search-section">
+            <div class="global-search-bar">
+                <span class="search-label">🔍 Global Search:</span>
+                <input type="text" id="globalSearchInput" placeholder="Search across all order types..." onkeyup="globalSearch()">
+                <button onclick="clearGlobalSearch()">Clear</button>
+            </div>
+        </div>
+
+        <!-- Order Type Boxes (Removed Blanks, Cash - Added P2P Orders, P2E Orders) -->
+        <div class="order-type-section">
+            <h3 style="margin-bottom: 15px; color: #333;">📦 Order Types Classification</h3>
+            <div class="order-type-boxes" id="orderTypeBoxes">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Local Search Bar (for filtered view) -->
+        <div class="search-section">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="🔍 Search in current view..." onkeyup="searchOrders()">
+                <button onclick="clearSearch()">Close</button>
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="orders-table-container">
+            <table id="ordersTable">
+                <thead>
+                    <tr>
+                        <th class="checkbox-cell">
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        </th>
+                        <th>
+                            <span class="filter-icon" onclick="showFilterDropdown(event, 'orderType')">🔽</span>
+                            Order Type
+                        </th>
+                        <th>Last Action</th>
+                        <th>Customer Name</th>
+                        <th>Phone</th>
+                        <th>Customer ID</th>
+                        <th>Note</th>
+                        <th>Order No</th>
+                        <th>Document No</th>
+                        <th>Ready Status</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody">
+                    <tr class="loading">
+                        <td colspan="10">Loading data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Filter Dropdown -->
+        <div class="filter-dropdown" id="filterDropdown">
+            <!-- Will be populated dynamically -->
+        </div>
+    </div>
+
+    <script>
+        // Sample Data (Removed Cash orders, Added P2P and P2E)
+        const ordersData = [
+            {
+                orderId: "SSML-4173193-2",
+                documentNo: "8003267774",
+                orderType: "SSML",
+                lastAction: "Delivered",
+                customerName: "Ahmed Hassan",
+                phone: "966559498234",
+                customerId: "1010082871",
+                note: "done ✅",
+                readyStatus: "Ready"
+            },
+            {
+                orderId: "00914599360726",
+                documentNo: "8003267438",
+                orderType: "Call Center",
+                lastAction: "Delivery Created",
+                customerName: "ELWAFY Alsandal",
+                phone: "966500301456",
+                customerId: "1014281982",
+                note: "",
+                readyStatus: ""
+            },
+            {
+                orderId: "DK-P037-037245",
+                documentNo: "2027455963",
+                orderType: "Nphies",
+                lastAction: "Created",
+                customerName: "ZAHRA ALKHALIFAH",
+                phone: "966581220789",
+                customerId: "1078363049",
+                note: "ins+486 requires follow-up 📋",
+                readyStatus: ""
+            },
+            {
+                orderId: "SSML-3978613-2",
+                documentNo: "8003259048",
+                orderType: "SSML",
+                lastAction: "Ready",
+                customerName: "Mohammed Ali",
+                phone: "966561301234",
+                customerId: "1014567890",
+                note: "",
+                readyStatus: "Ready"
+            },
+            {
+                orderId: "DK-P217-217145",
+                documentNo: "2027435551",
+                orderType: "Nphies",
+                lastAction: "Delivery Ready",
+                customerName: "Fatima Abdullah",
+                phone: "966550672345",
+                customerId: "1010123456",
+                note: "ins+486 needs follow-up 📝",
+                readyStatus: ""
+            },
+            {
+                orderId: "DK-P066-066245",
+                documentNo: "2027435281",
+                orderType: "Nphies",
+                lastAction: "Delivered",
+                customerName: "Sara Mohammed",
+                phone: "966544788901",
+                customerId: "1010234567",
+                note: "ins+486 needs filling 📝",
+                readyStatus: ""
+            },
+            {
+                orderId: "SSML-3910663-2",
+                documentNo: "8003245456",
+                orderType: "SSML",
+                lastAction: "Delivery Created",
+                customerName: "Khalid Omar",
+                phone: "966544988123",
+                customerId: "1078363050",
+                note: "",
+                readyStatus: ""
+            },
+            {
+                orderId: "WR-789012",
+                documentNo: "2027456789",
+                orderType: "Wasfaty Refill",
+                lastAction: "Created",
+                customerName: "Ibrahim Hassan",
+                phone: "966502860123",
+                customerId: "1010345678",
+                note: "prescription renewal 💊",
+                readyStatus: ""
+            },
+            {
+                orderId: "EC-HY-456789",
+                documentNo: "8003278901",
+                orderType: "ECommerce (Hybris)",
+                lastAction: "Delivered",
+                customerName: "Maha Khalid",
+                phone: "966554782890",
+                customerId: "1014890123",
+                note: "delivered to office 🏢",
+                readyStatus: ""
+            },
+            {
+                orderId: "EC-MG-789456",
+                documentNo: "8003289012",
+                orderType: "ECommerce (Magento)",
+                lastAction: "Ready",
+                customerName: "Yousef Ahmed",
+                phone: "966578123456",
+                customerId: "1010456789",
+                note: "ready for pickup 📦",
+                readyStatus: "Ready"
+            },
+            {
+                orderId: "P2P-123789",
+                documentNo: "8003298765",
+                orderType: "P2P Orders",
+                lastAction: "Delivered",
+                customerName: "Abdullah Salem",
+                phone: "966512345678",
+                customerId: "1010567890",
+                note: "P2P transfer completed ✅",
+                readyStatus: ""
+            },
+            {
+                orderId: "P2E-456123",
+                documentNo: "8003301234",
+                orderType: "P2E Orders",
+                lastAction: "Ready",
+                customerName: "Layla Hassan",
+                phone: "966523456789",
+                customerId: "1010678901",
+                note: "P2E order ready 🎯",
+                readyStatus: "Ready"
+            },
+            {
+                orderId: "P2P-987654",
+                documentNo: "8003312345",
+                orderType: "P2P Orders",
+                lastAction: "Created",
+                customerName: "Omar Fahad",
+                phone: "966534567890",
+                customerId: "1010789012",
+                note: "P2P order created 📋",
+                readyStatus: ""
+            }
+        ];
+
+        // Order Type Filter Options (Removed Blanks, Cash)
+        const orderTypeFilters = [
+            "(Non blanks)",
+            "Call Center",
+            "ECommerce (Hybris)",
+            "ECommerce (Magento)",
+            "Nphies",
+            "SSML",
+            "Wasfaty Refill",
+            "P2P Orders",
+            "P2E Orders"
+        ];
+
+        let currentFilter = null;
+        let selectedRows = new Set();
+        let currentViewData = [...ordersData];
+
+        // Mask phone numbers and IDs (show first 4 digits, then ***)
+        function maskNumber(number) {
+            if (!number) return '';
+            const str = number.toString();
+            if (str.length <= 4) return str;
+            return str.substring(0, 4) + '***';
+        }
+
+        // Sort orders: Delivered first, then Ready, then others
+        function sortOrders(orders) {
+            return orders.sort((a, b) => {
+                const priority = {
+                    'Delivered': 1,
+                    'Ready': 2,
+                    'Delivery Ready': 3,
+                    'Delivery Created': 4,
+                    'Created': 5
+                };
+                return (priority[a.lastAction] || 999) - (priority[b.lastAction] || 999);
+            });
+        }
+
+        // Render Order Type Boxes
+        function renderOrderTypeBoxes() {
+            const container = document.getElementById('orderTypeBoxes');
+            const typeCounts = {};
+            
+            ordersData.forEach(order => {
+                typeCounts[order.orderType] = (typeCounts[order.orderType] || 0) + 1;
+            });
+
+            const typeClasses = {
+                'SSML': 'ssml',
+                'Nphies': 'nphies',
+                'Call Center': 'call-center',
+                'ECommerce (Hybris)': 'ecommerce-hybris',
+                'ECommerce (Magento)': 'ecommerce-magento',
+                'Wasfaty Refill': 'wasfaty',
+                'P2P Orders': 'p2p',
+                'P2E Orders': 'p2e'
+            };
+
+            let html = '';
+            
+            Object.keys(typeCounts).forEach(type => {
+                const className = typeClasses[type] || 'ssml';
+                html += `
+                    <div class="order-type-box ${className}" onclick="filterByType('${type}')">
+                        ${type}
+                        <span class="count">${typeCounts[type]}</span>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Render Orders Table
+        function renderOrders(orders = null) {
+            const tbody = document.getElementById('ordersTableBody');
+            const data = orders || sortOrders([...ordersData]);
+            currentViewData = data;
+            
+            let html = '';
+            let rowIndex = 0;
+
+            data.forEach((order, index) => {
+                const statusClass = order.lastAction === 'Delivered' ? 'status-delivered' : 
+                                  order.lastAction === 'Ready' ? 'status-ready' : 'status-created';
+                
+                const highlightClass = index === data.length - 2 ? 'highlighted-green' : 
+                                     index === data.length - 1 ? 'highlighted-blue' : '';
+
+                html += `
+                    <tr class="${highlightClass}" data-index="${rowIndex}">
+                        <td class="checkbox-cell">
+                            <input type="checkbox" onchange="toggleRowSelection(${rowIndex})">
+                        </td>
+                        <td>${order.orderType}</td>
+                        <td class="${statusClass}">${order.lastAction}</td>
+                        <td>${order.customerName}</td>
+                        <td>${maskNumber(order.phone)}</td>
+                        <td>${maskNumber(order.customerId)}</td>
+                        <td>${order.note}</td>
+                        <td>${order.orderId}</td>
+                        <td>${order.documentNo}</td>
+                        <td>${order.readyStatus}</td>
+                    </tr>
+                `;
+                rowIndex++;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        // Global Fuzzy Search
+        function globalSearch() {
+            const searchTerm = document.getElementById('globalSearchInput').value.toLowerCase();
+            
+            if (!searchTerm) {
+                renderOrders();
+                return;
+            }
+
+            const filtered = ordersData.filter(order => {
+                return Object.values(order).some(val => 
+                    val.toString().toLowerCase().includes(searchTerm)
+                );
+            });
+
+            renderOrders(filtered);
+        }
+
+        // Clear Global Search
+        function clearGlobalSearch() {
+            document.getElementById('globalSearchInput').value = '';
+            renderOrders();
+        }
+
+        // Show Filter Dropdown
+        function showFilterDropdown(event, column) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('filterDropdown');
+            const rect = event.target.getBoundingClientRect();
+            
+            dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+            dropdown.style.left = rect.left + 'px';
+            
+            let html = '';
+            orderTypeFilters.forEach(filter => {
+                html += `<div class="filter-option" onclick="applyFilter('${filter}')">${filter}</div>`;
+            });
+            
+            dropdown.innerHTML = html;
+            dropdown.classList.add('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', () => {
+            document.getElementById('filterDropdown').classList.remove('active');
+        });
+
+        // Apply Filter
+        function applyFilter(filterValue) {
+            currentFilter = filterValue;
+            
+            if (filterValue === '(Non blanks)') {
+                const filtered = ordersData.filter(order => order.orderType && order.orderType !== '');
+                renderOrders(filtered);
+            } else {
+                const filtered = ordersData.filter(order => order.orderType === filterValue);
+                renderOrders(filtered);
+            }
+            
+            document.getElementById('filterDropdown').classList.remove('active');
+        }
+
+        // Filter by Type (from boxes)
+        function filterByType(type) {
+            applyFilter(type);
+        }
+
+        // Search Orders (local search in current view)
+        function searchOrders() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (!searchTerm) {
+                renderOrders(currentViewData);
+                return;
+            }
+
+            const filtered = currentViewData.filter(order => {
+                return Object.values(order).some(val => 
+                    val.toString().toLowerCase().includes(searchTerm)
+                );
+            });
+
+            renderOrders(filtered);
+        }
+
+        // Clear Search
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            renderOrders(currentViewData);
+        }
+
+        // Toggle Select All
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+            
+            checkboxes.forEach((cb, index) => {
+                cb.checked = selectAll.checked;
+                if (selectAll.checked) {
+                    selectedRows.add(index);
+                    cb.closest('tr').classList.add('selected');
+                } else {
+                    selectedRows.delete(index);
+                    cb.closest('tr').classList.remove('selected');
+                }
+            });
+        }
+
+        // Toggle Row Selection
+        function toggleRowSelection(index) {
+            const checkbox = document.querySelector(`tr[data-index="${index}"] input[type="checkbox"]`);
+            const row = checkbox.closest('tr');
+            
+            if (checkbox.checked) {
+                selectedRows.add(index);
+                row.classList.add('selected');
+            } else {
+                selectedRows.delete(index);
+                row.classList.remove('selected');
+            }
+        }
+
+        // Button Functions
+        function closeWindow() {
+            if (confirm('Close window?')) {
+                window.close();
+            }
+        }
+
+        function viewSelected() {
+            if (selectedRows.size === 0) {
+                alert('⚠️ Please select at least one order');
+                return;
+            }
+            alert(`✅ ${selectedRows.size} order(s) selected`);
+        }
+
+        function refreshData() {
+            location.reload();
+        }
+
+        function clearOrderConfirmed() {
+            if (confirm('Clear confirmed orders?')) {
+                alert('✅ Confirmed orders cleared');
+            }
+        }
+
+        function notifyCustomers() {
+            if (selectedRows.size === 0) {
+                alert('⚠️ Please select customers to notify');
+                return;
+            }
+            alert(`📱 Notifications sent to ${selectedRows.size} customer(s)`);
+        }
+
+        function showDeliveryView() {
+            alert('🚚 Delivery View');
+        }
+
+        // Initialize
+        window.onload = () => {
+            renderOrderTypeBoxes();
+            renderOrders();
+        };
+    </script>
+</body>
+</html>

@@ -1311,6 +1311,7 @@
 <script src="master1.js"></script>
 <script src="master2.js"></script>
 <script src="master3.js"></script>
+<script src="master-sync.js"></script>
 <script>
     window.allItems = [];
     if (typeof master1_data !== 'undefined') window.allItems = window.allItems.concat(master1_data);
@@ -1330,6 +1331,9 @@
         <div id="suggestions" class="suggestions-list"></div>
     </div>
     <div class="version-info">
+        <button onclick="window.syncMasterFromGit(this)" style="background:#2563eb; color:#fff; border:none; padding:3px 8px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:bold; margin-bottom:4px; display:inline-flex; align-items:center; gap:4px;" title="جلب وتحديث داتا الماستر مباشرة من روابط GitHub">
+            <span>🌐</span> تحديث الماستر من GitHub
+        </button><br>
         Data Version # 20/05/2028<br>
         POS Version # 25.5.28.0<br>
         Version Date: 26/05/2025
